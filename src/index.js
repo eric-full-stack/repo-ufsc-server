@@ -32,12 +32,13 @@ class App {
 		  key        : process.env.PUSHER_APP_KEY,
 		  secret     : process.env.PUSHER_APP_SECRET,
 		  cluster    : process.env.PUSHER_APP_CLUSTER,
-		  encrypted  : true,
+		  useTLS  : true,
 		})
 
 		return pusher
 	}
 	async database(){
+		mongoose.set('useCreateIndex', true);
 		const client = await mongoose.connect(process.env.MONGO_URL, {
 			useNewUrlParser: true
 		})

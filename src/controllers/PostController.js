@@ -2,6 +2,8 @@ const Post = require('../models/Post')
 const fs = require('fs');
 const archiver = require('archiver');
 const path = require('path')
+const aws = require('aws-sdk')
+const btoa = require('btoa');
 
 class PostController {
 
@@ -51,6 +53,7 @@ class PostController {
 	}
 
 	async downloadFiles(req, res){
+		
 		if(req.params.id){
 			
 			const post = await Post.findById(req.params.id)
@@ -59,25 +62,40 @@ class PostController {
 			})	
 
 			const zippath = path.resolve(__dirname, '..', '..', 'tmp', 'zip', `${post._id}.zip`)
-			if (fs.existsSync(zippath)) {
-				return res.download(zippath, `${post.title}.zip`)
-			}
+			
 			const output = fs.createWriteStream(zippath)
 			archive.pipe(output)
+			const promises = []
+			const fileNames = []
+			if(process.env.STORAGE_TYPE === 'local'){
+				for ( const file of post.files){
+					archive.append(fs.createReadStream(path.resolve(__dirname, '..', '..', 'tmp', 'uploads', `${file.key}`)),{name: file.name})
+				}
+			}else{
+				var bucket = new aws.S3({params: {
+					Bucket: process.env.AWS_BUCKET_NAME,
+					key: process.env.AWS_ACCESS_KEY_ID,
+				}});
 
-			for ( const file of post.files){
-				archive.append(fs.createReadStream(path.resolve(__dirname, '..', '..', 'tmp', 'uploads', `${file.key}`)),{name: file.name})
+				post.files.map((file) => {
+					fileNames.push(file.name)
+					promises.push(bucket.getObject({
+					  Key: file.key
+					}).promise())
+				})				
 			}
 			
-			return new Promise((resolve, reject) => {
+			return Promise.all(promises).then(data => {
 		        archive.on('error', e => reject(e));
 		        archive.on('warning', e => {
 		            if (e.code !== 'ENOENT') {
 		                reject(e);
 		            }
 		        });
-		        output.on('close', resolve);
-		        archive.finalize();
+		        data.map((thisFile, index) => {
+			    	archive.append(thisFile.Body, { name: fileNames[index] })
+			    })
+			    archive.finalize();
 		        setTimeout( () => res.download(zippath, 'files.zip'), 1000)
 		        
 		    });
@@ -85,6 +103,11 @@ class PostController {
 		}else{
 			return res.status(400).end('Invalid ID')
 		}
+	}
+
+	encode(data){
+	    
+	    return 
 	}
 
 	async create(req, res) {

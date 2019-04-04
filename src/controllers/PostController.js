@@ -1,5 +1,4 @@
 const Post = require('../models/Post')
-const request = require('request');
 const fs = require('fs');
 const archiver = require('archiver');
 const path = require('path')

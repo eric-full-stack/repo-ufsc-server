@@ -7,8 +7,17 @@ const { promisify } = require('util')
 const s3 = new aws.S3()
 
 function formatDate(fullDate) {
-	const date = `${fullDate.getDate()}/${fullDate.getMonth()}/${fullDate.getFullYear()}`
-	const hour = `${fullDate.getHours()}:${fullDate.getMinutes()}:${fullDate.getSeconds()}`
+
+	function formatDate(d) {
+	var date = new Date(d);
+	var day = ("0" + date.getDate()).slice(-2)
+	var month = ("0"+(date.getMonth()+1)).slice(-2)
+	var year = date.getFullYear();
+
+	return day + '/' + month + '/' + year;
+}
+	const date = `${("0" + fullDate.getDate()).slice(-2)}/${("0" + fullDate.getMonth()).slice(-2)}/${fullDate.getFullYear()}`
+	const hour = `${("0" + fullDate.getHours()).slice(-2)}:${("0" + fullDate.getMinutes()).slice(-2)}:${("0" + fullDate.getSeconds()).slice(-2)}`
 	return `${date} ${hour}`
 }
 

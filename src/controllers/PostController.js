@@ -6,7 +6,7 @@ const path = require('path')
 class PostController {
 
 	async index(req, res) {
-		if(req.query.search === 'false'){
+		if(!req.query.search){
 			const posts = await Post.find({}, null, {sort: {likes: -1, createdAt: -1}})
 			return res.json(posts)
 		}else{

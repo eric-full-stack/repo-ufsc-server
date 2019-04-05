@@ -3,14 +3,16 @@ const aws = require('aws-sdk')
 const fs = require('fs')
 const path = require('path')
 const { promisify } = require('util')
+const Teacher = require('./Teacher').schema
 
 const s3 = new aws.S3()
 
 function formatDate(fullDate) {
-
-	const date = `${("0" + fullDate.getDate()).slice(-2)}/${("0" + fullDate.getMonth()).slice(-2)}/${fullDate.getFullYear()}`
-	const hour = `${("0" + fullDate.getHours()).slice(-2)}:${("0" + fullDate.getMinutes()).slice(-2)}:${("0" + fullDate.getSeconds()).slice(-2)}`
-	return `${date} ${hour}`
+	if(fullDate){
+		const date = `${("0" + fullDate.getDate()).slice(-2)}/${("0" + fullDate.getMonth()).slice(-2)}/${fullDate.getFullYear()}`
+		const hour = `${("0" + fullDate.getHours()).slice(-2)}:${("0" + fullDate.getMinutes()).slice(-2)}:${("0" + fullDate.getSeconds()).slice(-2)}`
+		return `${date} ${hour}`
+	}
 }
 
 const FileSchema = new mongoose.Schema({
@@ -29,8 +31,8 @@ const PostSchema = new mongoose.Schema(
 	{
 		title: { type: String, required: [true, "A title plz."] },
 		description: {type: String, required: [true, "Describe something."] },
-		discipline: String,
-		teacher: String,
+		discipline:  mongoose.Schema.Types.Mixed,
+		teacher: Teacher,
 		tags: [String],
 		files: [FileSchema],
 		likes: Number,
@@ -61,4 +63,7 @@ FileSchema.pre('remove', function() {
 		return promisify(fs.unlink)(path.resolve(__dirname, '..', '..', 'tmp', 'uploads', this.key))
 	}
 })
-module.exports = mongoose.model("Post", PostSchema)
+
+
+exports.model = mongoose.model("Post", PostSchema)
+exports.schema = PostSchema

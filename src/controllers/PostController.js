@@ -1,9 +1,13 @@
-const Post = require('../models/Post')
-const fs = require('fs');
-const archiver = require('archiver');
+const Post = require('../models/Post').model
+const Discipline = require('../models/Discipline').model
+const Semester = require('../models/Semester').model
+const Class = require('../models/Class').model
+const fs = require('fs')
+const archiver = require('archiver')
 const path = require('path')
 const aws = require('aws-sdk')
-const btoa = require('btoa');
+const btoa = require('btoa')
+var ObjectId = require('mongoose').Types.ObjectId
 
 class PostController {
 
@@ -16,6 +20,11 @@ class PostController {
 			return res.json(posts)
 		}
 
+	}
+
+	async getByDiscipline(req, res) {
+		const posts = await Post.find({$text: {$search: ObjectId(req.params.id)}}, null, {sort: {likes: -1, createdAt: -1}})
+		return res.json(posts)
 	}
 
 	async show(req, res) {
@@ -105,25 +114,29 @@ class PostController {
 		}
 	}
 
-	encode(data){
-	    
-	    return 
-	}
-
 	async create(req, res) {
-		const { title, description, teacher, discipline, tags } = req.body
+		const { title, description, tags } = req.body
+		const teacher = JSON.parse(req.body.teacher)
+		const discipline = JSON.parse(req.body.discipline)
 		var files = req.files.map(file => {
 			return {name: file.originalname, size: file.size, key: file.key, type: file.mimetype, url: file.location || ''}
 		})
 		
-		const post = await Post.create({
+		const post = Post.create({
 			title,
 			description,
 			teacher,
 			discipline,
 			tags,
 			files
-		}).then(() => res.send())
+		}).then(async (postObj) => {
+			const discipline = await Discipline.findById(postObj.discipline._id).then(async (obj) => {
+				obj.posts.push(postObj)
+				await obj.save()
+			})
+			return res.send()
+			
+		})
 		.catch(err => {
 			return res.json(err)
 		})
@@ -141,9 +154,6 @@ class PostController {
 		}
 	}
 
-	async search(req, res) {
-		
-	}
 }
 
 module.exports = new PostController()

@@ -43,18 +43,18 @@ class App {
 			useNewUrlParser: true
 		})
 		const db = mongoose.connection
-		const postsCollection = db.collection('posts')
-		const changeStreamPosts = postsCollection.watch({ fullDocument: 'updateLookup' })
-		changeStreamPosts.
-		on('change', data => {
-			let channel = 'posts'
-			const post = data.fullDocument
-			this.pusher.trigger(
-				channel,
-				'bdchange', 
-				post,
-			)
-		})
+		// const postsCollection = db.collection('posts')
+		// const changeStreamPosts = postsCollection.watch({ fullDocument: 'updateLookup' })
+		// changeStreamPosts.
+		// on('change', data => {
+		// 	let channel = 'posts'
+		// 	const post = data.fullDocument
+		// 	this.pusher.trigger(
+		// 		channel,
+		// 		'bdchange', 
+		// 		post,
+		// 	)
+		// })
 	}
 
 	routes(){

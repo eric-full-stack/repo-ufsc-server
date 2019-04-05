@@ -19,7 +19,6 @@ class ClassController {
 
 	async create(req, res) {
 		const { name } = req.body
-		console.log(req.body.semesters)
 		const semesters = JSON.parse(req.body.semesters)
 		const { file } = req
 		var image =  {name: file.originalname, size: file.size, key: file.key, type: file.mimetype, url: file.location || ''}

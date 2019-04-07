@@ -1,6 +1,7 @@
 const Post = require('../models/Post').model
 const Discipline = require('../models/Discipline').model
 const Semester = require('../models/Semester').model
+const User = require('../models/User').model
 const Class = require('../models/Class').model
 const fs = require('fs')
 const archiver = require('archiver')
@@ -40,7 +41,11 @@ class PostController {
 			const post = await Post.findById(req.params.id)
 			post.likes = post.likes+1 || 1
 			await post.save()
-
+			const user = await User.findOne({_id: req.userId})
+			if(user){
+				user.likes.push(post._id)
+				await user.save()
+			}
 			return res.json({likes: post.likes})
 
 		}else{
@@ -53,8 +58,10 @@ class PostController {
 			const post = await Post.findById(req.params.id)
 			post.likes = post.likes-1 || 0
 			await post.save()
-
+			var user = await User.findOneAndUpdate({_id: req.userId}, {$pull: {likes: post._id}})
+			
 			return res.json({likes: post.likes})
+			
 
 		}else{
 			return res.status(400).end('Invalid ID')
@@ -118,26 +125,28 @@ class PostController {
 		const { title, description, tags } = req.body
 		const teacher = JSON.parse(req.body.teacher)
 		const discipline = JSON.parse(req.body.discipline)
+		const user = req.userId
 		var files = req.files.map(file => {
 			return {name: file.originalname, size: file.size, key: file.key, type: file.mimetype, url: file.location || ''}
 		})
-		
 		const post = Post.create({
 			title,
 			description,
 			teacher,
 			discipline,
 			tags,
-			files
+			files,
+			user
 		}).then(async (postObj) => {
 			const discipline = await Discipline.findById(postObj.discipline._id).then(async (obj) => {
 				obj.posts.push(postObj)
 				await obj.save()
 			})
-			return res.send()
+			return res.send({post: postObj})
 			
 		})
 		.catch(err => {
+			console.log(err)
 			return res.json(err)
 		})
 	}
@@ -145,12 +154,23 @@ class PostController {
 	async delete(req, res) {
 		try{
 			const post = await Post.findById(req.params.id)
-			
-			await post.remove()
-
+			if(post.user == req.userId)
+				await post.remove()
+			else
+				return res.status(400).send({error: 'Post not belongs to user'})
 			return res.send()
 		}catch(err){
-			return res.status(400).end(err)
+			return res.status(400).send(err)
+		}
+	}
+
+	async byUser(req, res){
+		try{
+			const posts = await Post.find({user: ObjectId(req.userId)})
+
+			return res.send({posts})
+		}catch(err){
+			return res.status(400).send(err)
 		}
 	}
 

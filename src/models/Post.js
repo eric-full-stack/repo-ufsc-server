@@ -33,6 +33,7 @@ const PostSchema = new mongoose.Schema(
 		description: {type: String, required: [true, "Describe something."] },
 		discipline:  mongoose.Schema.Types.Mixed,
 		teacher: Teacher,
+		user: mongoose.Schema.Types.ObjectId,
 		tags: [String],
 		files: [FileSchema],
 		likes: Number,

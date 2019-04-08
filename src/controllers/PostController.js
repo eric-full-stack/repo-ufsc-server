@@ -32,7 +32,7 @@ class PostController {
 		if(req.params.id){
 			return res.json(await Post.findById(req.params.id))		
 		}else{
-			return res.status(400).end('Invalid ID')
+			return res.status(400).send('Invalid ID')
 		}
 	}
 
@@ -49,7 +49,7 @@ class PostController {
 			return res.json({likes: post.likes})
 
 		}else{
-			return res.status(400).end('Invalid ID')
+			return res.status(400).send('Invalid ID')
 		}
 	}
 
@@ -64,7 +64,7 @@ class PostController {
 			
 
 		}else{
-			return res.status(400).end('Invalid ID')
+			return res.status(400).send('Invalid ID')
 		}
 	}
 
@@ -117,7 +117,7 @@ class PostController {
 		    });
 						
 		}else{
-			return res.status(400).end('Invalid ID')
+			return res.status(400).send('Invalid ID')
 		}
 	}
 

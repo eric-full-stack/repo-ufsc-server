@@ -46,7 +46,12 @@ module.exports = {
 			'image/pjpeg',
 			'image/png',
 			'image/gif',
-			'application/pdf'
+			'application/pdf',
+			'application/zip',
+			'application/x-rar-compressed', 
+			'application/octet-stream',  
+			'application/x-zip-compressed', 
+			'multipart/x-zip'
 		]
 
 		if(allowedMimes.includes(file.mimetype))

@@ -5,17 +5,30 @@ const mongoose = require('mongoose')
 const path = require('path')
 const cors = require('cors')
 const routes = require('./routes')
-const Pusher = require('pusher')
 
 class App {
 	
 	constructor(){
 		this.express = express()
-		this.pusher = this.pusher()
-
+		this.server = require('http').Server(this.express)
+		this.io = require('socket.io')(this.server)
+		
+		this.ioConnection()
 		this.middlewares()
 		this.database()
 		this.routes()
+	}
+
+	ioConnection(){
+		this.io.on('connection', socket => {
+			socket.on('connectPost', id => {
+				socket.join(id)
+			})
+
+			socket.on('disconnectPost', id => {
+				socket.leave(id)
+			})
+		})
 	}
 
 	middlewares(){
@@ -24,37 +37,17 @@ class App {
 		this.express.use(express.urlencoded({extended: true}))
 		this.express.use(morgan('dev'))
 		this.express.use('/files', express.static(path.resolve(__dirname, '..', 'tmp', 'uploads')))
-	}
-	pusher(){
-
-		const pusher = new Pusher({
-		  appId      : process.env.PUSHER_APP_ID,
-		  key        : process.env.PUSHER_APP_KEY,
-		  secret     : process.env.PUSHER_APP_SECRET,
-		  cluster    : process.env.PUSHER_APP_CLUSTER,
-		  useTLS  : true,
+		this.express.use((req, res, next) => {
+			req.io = this.io
+			return next()
 		})
-
-		return pusher
 	}
+
 	async database(){
 		mongoose.set('useCreateIndex', true);
 		const client = await mongoose.connect(process.env.MONGO_URL, {
 			useNewUrlParser: true
 		})
-		const db = mongoose.connection
-		// const postsCollection = db.collection('posts')
-		// const changeStreamPosts = postsCollection.watch({ fullDocument: 'updateLookup' })
-		// changeStreamPosts.
-		// on('change', data => {
-		// 	let channel = 'posts'
-		// 	const post = data.fullDocument
-		// 	this.pusher.trigger(
-		// 		channel,
-		// 		'bdchange', 
-		// 		post,
-		// 	)
-		// })
 	}
 
 	routes(){
@@ -62,4 +55,4 @@ class App {
 	}
 }
 
-module.exports = new App().express
+module.exports = new App().server

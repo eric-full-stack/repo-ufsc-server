@@ -46,6 +46,7 @@ class PostController {
 				user.likes.push(post._id)
 				await user.save()
 			}
+			req.io.sockets.to(post._id).emit('likes', {post: post._id, likes: post.likes})
 			return res.json({likes: post.likes})
 
 		}else{
